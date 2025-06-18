@@ -12,8 +12,27 @@ const DonationSchema = new mongoose.Schema({
   country: { type: String, required: true },
   amount: { type: Number, required: true },
   panCard: { type: String },
+  donorType: { 
+    type: String,
+    enum: ['Bronze', 'Silver', 'Gold', 'Platinum', 'Regular' , ""],
+    default: 'Regular'
+  },
+  frequency: {
+    type: String,
+    enum: ['once', 'monthly', 'quarterly', 'annually'],
+    default: 'once'
+  },
+  razorpayOrderId: { type: String },
+  razorpayPaymentId: { type: String },
+  razorpaySignature: { type: String },
+  isVerified: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });
+
+// Add indexes for better query performance
+DonationSchema.index({ email: 1 });
+DonationSchema.index({ donorType: 1 });
+DonationSchema.index({ createdAt: -1 });
 
 const Donation = mongoose.model('Donation', DonationSchema);
 
