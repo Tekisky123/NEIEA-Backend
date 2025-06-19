@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const DonationSchema = new mongoose.Schema({
   firstName: { type: String, required: true },
@@ -12,15 +12,18 @@ const DonationSchema = new mongoose.Schema({
   country: { type: String, required: true },
   amount: { type: Number, required: true },
   panCard: { type: String },
-  donorType: { 
+  donorType: {
     type: String,
-    enum: ['Bronze', 'Silver', 'Gold', 'Platinum', 'Regular' , ""],
-    default: 'Regular'
+    default: "Regular",
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "DonorUser",
   },
   frequency: {
     type: String,
-    enum: ['once', 'monthly', 'quarterly', 'annually'],
-    default: 'once'
+    enum: ["once", "monthly", "quarterly", "annually"],
+    default: "once",
   },
   razorpayOrderId: { type: String },
   razorpayPaymentId: { type: String },
@@ -34,6 +37,6 @@ DonationSchema.index({ email: 1 });
 DonationSchema.index({ donorType: 1 });
 DonationSchema.index({ createdAt: -1 });
 
-const Donation = mongoose.model('Donation', DonationSchema);
+const Donation = mongoose.model("Donation", DonationSchema);
 
 export default Donation;
