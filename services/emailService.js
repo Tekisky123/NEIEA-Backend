@@ -1,7 +1,9 @@
 import nodemailer from "nodemailer";
 import donorDonationTemplate from "../templates/donorDonationTemplate.js";
 import adminDonationTemplate from "../templates/adminDonationTemplate.js";
-import donorAccountTemplate from "../templates/donorAccountTemplate.js"; // Import donor account template
+import donorAccountTemplate from "../templates/donorAccountTemplate.js";
+import assignStudentTemplate from "../templates/assignStudentTemplate.js";
+import sendProgressTemplate from "../templates/sendProgressTemplate.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -22,18 +24,22 @@ const transporter = nodemailer.createTransport({
 /**
  * Send email based on type
  * @param {Object} params
- * @param {"donation"|"account"} params.type
- * @param {Object} params.data - donation or other data
- * @param {string} [params.password] - optional for account creation
+ * @param {string} params.type - Type of email to send
+ * @param {Object} params.data - Data for the email template
+ * @param {string} [params.password] - Optional for account creation
+ * @param {string} [params.to] - Recipient email address
+ * @param {string} [params.subject] - Subject of the email
+ * @param {string} [params.html] - Custom HTML content for the email
  */
-const sendDonationEmail = async ({ type, data, password }) => {
-  if (!data || !data.email) {
+const sendDonationEmail = async ({ type, data, password, to, subject, html }) => {
+  if (!data && !to) {
     console.error("Cannot send email: Missing data or recipient email");
     return;
   }
 
   let mailOptions;
 
+  // Determine the email content based on the type
   switch (type) {
     case "donation":
       mailOptions = {
@@ -62,6 +68,24 @@ const sendDonationEmail = async ({ type, data, password }) => {
       };
       break;
 
+    case "assignStudent":
+      mailOptions = {
+        from: `"NEIEA" <${process.env.SMTP_EMAIL}>`,
+        to: to || data.email,
+        subject: subject || "Student Assigned",
+        html: html || assignStudentTemplate(data.student, data.donor),
+      };
+      break;
+
+    case "progressUpdate":
+      mailOptions = {
+        from: `"NEIEA" <${process.env.SMTP_EMAIL}>`,
+        to: to || data.email,
+        subject: subject || "Student Progress Update",
+        html: html || sendProgressTemplate(data.student, data.donor, data.progressDetails),
+      };
+      break;
+
     default:
       console.warn("Unknown email type:", type);
       return;
@@ -74,7 +98,7 @@ const sendDonationEmail = async ({ type, data, password }) => {
     if (!mailOptions.to) throw new Error(`No recipient defined for ${type} email`);
 
     await transporter.sendMail(mailOptions);
-    console.log(`✅ Email sent successfully: ${type}`);
+    console.log(`✅ Email sent successfully to ${mailOptions.to}`);
   } catch (error) {
     console.error(`❌ Error sending ${type} email:`, error.message || error);
   }
