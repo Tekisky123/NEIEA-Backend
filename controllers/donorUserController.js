@@ -1,13 +1,20 @@
-import DonorUser from '../models/DonorUser.js';
-import ErrorResponse from '../utils/errorResponse.js';
-import sendEmail from '../services/emailService.js';
-import crypto from 'crypto';
-import jwt from 'jsonwebtoken';
-import Donation from '../models/Donation.js';
+import DonorUser from "../models/DonorUser.js";
+import ErrorResponse from "../utils/errorResponse.js";
+import sendEmail from "../services/emailService.js";
+import crypto from "crypto";
+import jwt from "jsonwebtoken";
+import Donation from "../models/Donation.js";
+import Razorpay from "razorpay";
+import sendDonationEmail from "../services/emailService.js";
 
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 // @desc    Register donor user
 // @route   POST /api/v1/donor/auth/register
 // @access  Public
+
 export const register = async (req, res, next) => {
   try {
     const { firstName, lastName, email, password, phone, donorType } = req.body;
@@ -19,7 +26,7 @@ export const register = async (req, res, next) => {
       email,
       password,
       phone,
-      donorType
+      donorType,
     });
 
     sendTokenResponse(user, 200, res);
@@ -34,21 +41,23 @@ export const login = async (req, res, next) => {
 
     // Validate email & password
     if (!email || !password) {
-      return next(new ErrorResponse('Please provide an email and password', 400));
+      return next(
+        new ErrorResponse("Please provide an email and password", 400)
+      );
     }
 
     // Check for user
-    const user = await DonorUser.findOne({ email }).select('+password');
+    const user = await DonorUser.findOne({ email }).select("+password");
 
     if (!user) {
-      return next(new ErrorResponse('Invalid credentials', 401));
+      return next(new ErrorResponse("Invalid credentials", 401));
     }
 
     // Check if password matches
     const isMatch = await user.matchPassword(password);
 
     if (!isMatch) {
-      return next(new ErrorResponse('Invalid credentials', 401));
+      return next(new ErrorResponse("Invalid credentials", 401));
     }
 
     // Update last login
@@ -57,7 +66,7 @@ export const login = async (req, res, next) => {
 
     // Send token response
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRE
+      expiresIn: process.env.JWT_EXPIRE,
     });
 
     // Set cookie options
@@ -66,12 +75,13 @@ export const login = async (req, res, next) => {
         Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
       ),
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production'
+      secure: process.env.NODE_ENV === "production",
     };
 
     // Send response
-    res.status(200)
-      .cookie('token', token, options)
+    res
+      .status(200)
+      .cookie("token", token, options)
       .json({
         success: true,
         token,
@@ -80,13 +90,12 @@ export const login = async (req, res, next) => {
           firstName: user.firstName,
           lastName: user.lastName,
           email: user.email,
-          donorType: user.donorType
-        }
+          donorType: user.donorType,
+        },
       });
-
   } catch (err) {
-    console.error('Login error:', err);
-    next(new ErrorResponse('Server error during login', 500));
+    console.error("Login error:", err);
+    next(new ErrorResponse("Server error during login", 500));
   }
 };
 
@@ -94,14 +103,14 @@ export const login = async (req, res, next) => {
 // @route   GET /api/v1/donor/auth/logout
 // @access  Private
 export const logout = async (req, res, next) => {
-  res.cookie('token', 'none', {
+  res.cookie("token", "none", {
     expires: new Date(Date.now() + 10 * 1000),
-    httpOnly: true
+    httpOnly: true,
   });
 
   res.status(200).json({
     success: true,
-    data: {}
+    data: {},
   });
 };
 
@@ -110,11 +119,11 @@ export const logout = async (req, res, next) => {
 // @access  Private
 export const getMe = async (req, res, next) => {
   try {
-    const user = await DonorUser.findById(req.user.id).populate('donations');
-    
+    const user = await DonorUser.findById(req.user.id).populate("donations");
+
     res.status(200).json({
       success: true,
-      data: user
+      data: user,
     });
   } catch (err) {
     next(err);
@@ -130,17 +139,21 @@ export const updateDetails = async (req, res, next) => {
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       email: req.body.email,
-      phone: req.body.phone
+      phone: req.body.phone,
     };
 
-    const user = await DonorUser.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
-      new: true,
-      runValidators: true
-    });
+    const user = await DonorUser.findByIdAndUpdate(
+      req.user.id,
+      fieldsToUpdate,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     res.status(200).json({
       success: true,
-      data: user
+      data: user,
     });
   } catch (err) {
     next(err);
@@ -152,11 +165,11 @@ export const updateDetails = async (req, res, next) => {
 // @access  Private
 export const updatePassword = async (req, res, next) => {
   try {
-    const user = await DonorUser.findById(req.user.id).select('+password');
+    const user = await DonorUser.findById(req.user.id).select("+password");
 
     // Check current password
     if (!(await user.matchPassword(req.body.currentPassword))) {
-      return next(new ErrorResponse('Password is incorrect', 401));
+      return next(new ErrorResponse("Password is incorrect", 401));
     }
 
     user.password = req.body.newPassword;
@@ -176,7 +189,7 @@ export const forgotPassword = async (req, res, next) => {
     const user = await DonorUser.findOne({ email: req.body.email });
 
     if (!user) {
-      return next(new ErrorResponse('There is no user with that email', 404));
+      return next(new ErrorResponse("There is no user with that email", 404));
     }
 
     // Get reset token
@@ -185,18 +198,20 @@ export const forgotPassword = async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
 
     // Create reset URL
-    const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/donor/auth/resetpassword/${resetToken}`;
+    const resetUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/api/v1/donor/auth/resetpassword/${resetToken}`;
 
     const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
 
     try {
       await sendEmail({
         email: user.email,
-        subject: 'Password reset token',
-        message
+        subject: "Password reset token",
+        message,
       });
 
-      res.status(200).json({ success: true, data: 'Email sent' });
+      res.status(200).json({ success: true, data: "Email sent" });
     } catch (err) {
       console.error(err);
       user.resetPasswordToken = undefined;
@@ -204,7 +219,7 @@ export const forgotPassword = async (req, res, next) => {
 
       await user.save({ validateBeforeSave: false });
 
-      return next(new ErrorResponse('Email could not be sent', 500));
+      return next(new ErrorResponse("Email could not be sent", 500));
     }
   } catch (err) {
     next(err);
@@ -218,17 +233,17 @@ export const resetPassword = async (req, res, next) => {
   try {
     // Get hashed token
     const resetPasswordToken = crypto
-      .createHash('sha256')
+      .createHash("sha256")
       .update(req.params.resettoken)
-      .digest('hex');
+      .digest("hex");
 
     const user = await DonorUser.findOne({
       resetPasswordToken,
-      resetPasswordExpire: { $gt: Date.now() }
+      resetPasswordExpire: { $gt: Date.now() },
     });
 
     if (!user) {
-      return next(new ErrorResponse('Invalid token', 400));
+      return next(new ErrorResponse("Invalid token", 400));
     }
 
     // Set new password
@@ -259,11 +274,11 @@ export const getDonorUsers = async (req, res, next) => {
 // @access  Private/Admin
 export const getDonorUser = async (req, res, next) => {
   try {
-    const user = await DonorUser.findById(req.params.id).populate('donations');
+    const user = await DonorUser.findById(req.params.id).populate("donations");
 
     res.status(200).json({
       success: true,
-      data: user
+      data: user,
     });
   } catch (err) {
     next(err);
@@ -279,7 +294,7 @@ export const createDonorUser = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      data: user
+      data: user,
     });
   } catch (err) {
     next(err);
@@ -293,12 +308,12 @@ export const updateDonorUser = async (req, res, next) => {
   try {
     const user = await DonorUser.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
-      runValidators: true
+      runValidators: true,
     });
 
     res.status(200).json({
       success: true,
-      data: user
+      data: user,
     });
   } catch (err) {
     next(err);
@@ -314,7 +329,7 @@ export const deleteDonorUser = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      data: {}
+      data: {},
     });
   } catch (err) {
     next(err);
@@ -325,7 +340,7 @@ export const deleteDonorUser = async (req, res, next) => {
 const sendTokenResponse = (user, statusCode, res) => {
   // Create token
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE
+    expiresIn: process.env.JWT_EXPIRE,
   });
 
   const options = {
@@ -333,12 +348,12 @@ const sendTokenResponse = (user, statusCode, res) => {
       Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
     ),
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production'
+    secure: process.env.NODE_ENV === "production",
   };
 
   res
     .status(statusCode)
-    .cookie('token', token, options)
+    .cookie("token", token, options)
     .json({
       success: true,
       token,
@@ -347,8 +362,8 @@ const sendTokenResponse = (user, statusCode, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        donorType: user.donorType
-      }
+        donorType: user.donorType,
+      },
     });
 };
 
@@ -357,14 +372,158 @@ export const getDonorDonations = async (req, res, next) => {
     // The donor's ID is available from req.user.id (set by auth middleware)
     const donations = await Donation.find({ userId: req.user.id })
       .sort({ createdAt: -1 }) // Sort by most recent first
-      .select('-razorpaySignature -__v'); // Exclude sensitive/uneeded fields
+      .select("-razorpaySignature -__v"); // Exclude sensitive/uneeded fields
 
     res.status(200).json({
       success: true,
       count: donations.length,
-      data: donations
+      data: donations,
     });
   } catch (error) {
-    next(new ErrorResponse('Failed to fetch donations', 500));
+    next(new ErrorResponse("Failed to fetch donations", 500));
+  }
+};
+
+export const createDonorDonation = async (req, res, next) => {
+  try {
+    const { amount, currency = "INR", receipt, notes } = req.body;
+    const userId = req.user.id;
+
+    // Create Razorpay order
+    const options = {
+      amount: amount * 100, // Razorpay expects amount in paise
+      currency,
+      receipt,
+      notes,
+      payment_capture: 1,
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    // Store the order details temporarily in the session or return it to the client
+    res.status(200).json({
+      success: true,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+    });
+  } catch (error) {
+    console.error("Razorpay order error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create payment order",
+    });
+  }
+};
+
+export const verifyDonorDonation = async (req, res) => {
+  try {
+    const { razorpayOrderId, razorpayPaymentId, razorpaySignature, donationData } = req.body;
+
+    const generatedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+      .digest("hex");
+
+    if (generatedSignature !== razorpaySignature) {
+      return res.status(400).json({
+        success: false,
+        message: "Payment verification failed",
+      });
+    }
+
+    // Fetch donor details
+    const donor = await DonorUser.findById(req.user.id);
+
+    if (!donor) {
+      return res.status(404).json({
+        success: false,
+        message: "Donor not found",
+      });
+    }
+
+    // Use donor's existing donorType and frequency if available
+    const donorType = donor.donorType || donationData.donorType || "Regular";
+    const frequency = donationData.frequency || "once";
+
+    // Create a new donation record with donor details
+    const donation = new Donation({
+      firstName: donor.firstName,
+      lastName: donor.lastName,
+      email: donor.email,
+      phone: donor.phone,
+      address: donor.address || 'N/A',
+      city: donor.city || 'N/A',
+      state: donor.state || 'N/A',
+      zipCode: donor.zipCode || 'N/A',
+      country: donor.country || 'N/A',
+      amount: donationData.amount,
+      donorType,
+      frequency,
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature,
+      isVerified: true,
+      userId: req.user.id,
+    });
+
+    await donation.save();
+
+    // Add the donation to the user's donations array
+    await DonorUser.findByIdAndUpdate(req.user.id, {
+      $push: { donations: donation._id },
+    });
+
+    // Send confirmation emails
+    await sendDonationEmail({
+      type: "donation",
+      data: donation,
+    });
+
+    await sendDonationEmail({
+      type: "admin",
+      data: donation,
+    });
+
+    res.status(201).json({
+      success: true,
+      data: donation,
+    });
+  } catch (error) {
+    console.error("Payment verification error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Payment verification failed",
+    });
+  }
+};
+
+
+export const getStudents = async (req, res, next) => {
+  try {
+    const donorId = req.user.id;
+
+    if (!donorId) {
+      return next(new ErrorResponse("Unauthorized: No donor ID found", 401));
+    }
+
+    // Find donor and populate students
+    const donor = await DonorUser.findById(donorId).populate({
+      path: "students",
+      model: "Student",
+      select: "-__v", 
+    });
+
+    if (!donor) {
+      return next(new ErrorResponse("Donor not found", 404));
+    }
+
+    res.status(200).json({
+      success: true,
+      data: donor.students || [],
+    });
+  } catch (error) {
+    console.error("Error fetching students:", error);
+    next(new ErrorResponse("Server error while fetching students", 500));
   }
 };

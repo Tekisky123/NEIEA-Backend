@@ -4,6 +4,8 @@ import connectDB from "./config/db.js";
 import donationRoutes from "./routes/donationRoutes.js";
 import cors from "cors";
 import donorUserRoutes from "./routes/donorUserRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
+import courseRoutes from "./routes/courseRoutes.js";
 
 dotenv.config();
 
@@ -16,6 +18,8 @@ app.use(cors());
 
 app.use("/donation", donationRoutes);
 app.use("/donor", donorUserRoutes);
+app.use("/admin", adminRoutes);
+app.use("/course", courseRoutes);
 
 const PORT = process.env.PORT || 5000;
 

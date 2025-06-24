@@ -1,18 +1,18 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 const DonorUserSchema = new mongoose.Schema({
-  firstName: { 
-    type: String, 
-    required: [true, 'First name is required'] 
+  firstName: {
+    type: String,
+    required: [true, 'First name is required']
   },
-  lastName: { 
-    type: String, 
-    required: [true, 'Last name is required'] 
+  lastName: {
+    type: String,
+    required: [true, 'Last name is required']
   },
-  
-  email: { 
-    type: String, 
+  email: {
+    type: String,
     required: [true, 'Email is required'],
     unique: true,
     match: [
@@ -37,6 +37,10 @@ const DonorUserSchema = new mongoose.Schema({
   donations: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Donation'
+  }],
+  students: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Student'
   }],
   resetPasswordToken: String,
   resetPasswordExpire: Date,
@@ -64,14 +68,15 @@ DonorUserSchema.methods.matchPassword = async function(enteredPassword) {
 
 DonorUserSchema.methods.getResetPasswordToken = function() {
   const resetToken = crypto.randomBytes(20).toString('hex');
-  
+
   this.resetPasswordToken = crypto
     .createHash('sha256')
     .update(resetToken)
     .digest('hex');
-    
+
   this.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
-  
+
   return resetToken;
 };
+
 export default mongoose.model('DonorUser', DonorUserSchema);

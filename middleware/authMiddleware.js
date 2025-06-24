@@ -1,38 +1,44 @@
 import jwt from "jsonwebtoken";
 import DonorUser from "../models/DonorUser.js";
+import Admin from "../models/Admin.js";
 import ErrorResponse from "../utils/errorResponse.js";
 
 export const protect = async (req, res, next) => {
   let token;
 
-  // 1. Check for token in Authorization header
+  // 1. Extract token
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer ")
   ) {
-    // Split and get the token part only
     token = req.headers.authorization.split(" ")[1];
-  } 
-  // 2. Or check for token in cookies
-  else if (req.cookies?.token) {
+  } else if (req.cookies?.token) {
     token = req.cookies.token;
   }
-
 
   if (!token) {
     return next(new ErrorResponse("Not authorized to access this route", 401));
   }
 
   try {
-    // Verify token using your JWT secret
+    // 2. Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Attach user to request
-    req.user = await DonorUser.findById(decoded.id);
+    // 3. Try to find user in DonorUser model
+    let user = await DonorUser.findById(decoded.id);
+    
+    // 4. If not found, try Admin model
+    if (!user) {
+      user = await Admin.findById(decoded.id);
+    }
 
-    if (!req.user) {
+    // 5. If still not found, return error
+    if (!user) {
       return next(new ErrorResponse("No user found with this ID", 404));
     }
+
+    // 6. Attach found user to request
+    req.user = user;
 
     next();
   } catch (err) {
