@@ -21,16 +21,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-/**
- * Send email based on type
- * @param {Object} params
- * @param {string} params.type - Type of email to send
- * @param {Object} params.data - Data for the email template
- * @param {string} [params.password] - Optional for account creation
- * @param {string} [params.to] - Recipient email address
- * @param {string} [params.subject] - Subject of the email
- * @param {string} [params.html] - Custom HTML content for the email
- */
 const sendDonationEmail = async ({ type, data, password, to, subject, html }) => {
   if (!data && !to) {
     console.error("Cannot send email: Missing data or recipient email");
