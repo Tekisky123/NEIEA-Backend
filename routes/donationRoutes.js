@@ -6,13 +6,13 @@ import {
   verifyPayment,
 } from "../controllers/donationController.js";
 
-const router = express.Router();
+const donationRoutes = express.Router();
 
-router.get("/getAllDonationDetails", getAllDonations);
-router.get("/getOneDonation/:id", getOneDonation);
-router.post("/create-donation", createDonation);
+donationRoutes.get("/getAllDonationDetails", getAllDonations);
+donationRoutes.get("/getOneDonation/:id", getOneDonation);
+donationRoutes.post("/create-donation", createDonation);
 
 // Verify payment and create donation
-router.post("/verify-payment", verifyPayment);
+donationRoutes.post("/verify-payment", verifyPayment);
 
-export default router;
+export default donationRoutes;
