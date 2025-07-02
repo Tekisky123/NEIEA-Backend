@@ -13,7 +13,7 @@ export const getAllCoursesPublic = async (req, res) => {
 // Get single course by ID
 export const getCourseById = async (req, res) => {
   try {
-    const course = await Course.findById(req.params.id);
+    const course = await Course.findById(req.params.id).select("-applicants");
 
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
