@@ -1,5 +1,7 @@
 import Course from "../models/Course.js";
-import Applicant from "../models/Applicant.js"; 
+import Applicant from "../models/Applicant.js";
+import validator from 'validator';
+
 
 export const getAllCoursesPublic = async (req, res) => {
   try {
@@ -25,30 +27,68 @@ export const getCourseById = async (req, res) => {
   }
 };
 
-// Apply to a course (user submits application)
+
 export const applyToCourse = async (req, res) => {
   try {
     const { id } = req.params;
-    const { fullName, email, phone, message } = req.body;
+    const {
+      fullName,
+      email,
+      phone,
+      motherTongue,
+      age,
+      gender,
+      isStudent,
+      classStudying,
+      state,
+      city,
+      whatsappNumber,
+      referredBy,
+      convenientTimeSlot,
+      message
+    } = req.body;
 
-    // Basic validation
-    if (!fullName || !email || !phone) {
+    // Basic validation for required fields
+    if (
+      !fullName || !email || !phone || !motherTongue || !age || !gender ||
+      !isStudent || !state || !city || !whatsappNumber || !referredBy ||
+      !convenientTimeSlot
+    ) {
       return res.status(400).json({ message: "All required fields must be filled." });
     }
 
-    const course = await Course.findById(id);
+    // Validate email format
+    if (!validator.isEmail(email)) {
+      return res.status(400).json({ message: "Please provide a valid email." });
+    }
 
+    // Validate phone number format
+    if (!validator.isMobilePhone(phone)) {
+      return res.status(400).json({ message: "Please provide a valid phone number." });
+    }
+
+    const course = await Course.findById(id);
     if (!course) {
       return res.status(404).json({ message: "Course not found or inactive" });
     }
 
-    // Save application (customize model fields as needed)
+    // Save application with all fields
     const applicant = new Applicant({
       course: course._id,
       fullName,
       email,
       phone,
-      message,
+      motherTongue,
+      age,
+      gender,
+      isStudent,
+      classStudying: isStudent === "Yes" ? classStudying : undefined,
+      state,
+      city,
+      whatsappNumber,
+      referredBy,
+      convenientTimeSlot,
+      message: message || "",
     });
 
     await applicant.save();
@@ -59,6 +99,12 @@ export const applyToCourse = async (req, res) => {
 
     res.status(201).json({ message: "Application submitted successfully", applicant });
   } catch (error) {
+    if (error.code === 11000) {
+      // Handle duplicate key error
+      return res.status(400).json({ message: "You have already applied to this course." });
+    }
     res.status(500).json({ message: error.message });
   }
 };
+
+
