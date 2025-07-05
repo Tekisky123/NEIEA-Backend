@@ -282,12 +282,15 @@ export const updateStudentProgress = async (req, res) => {
 // Create a new course
 export const createCourse = async (req, res) => {
   try {
-    const { title, description, duration, adminId } = req.body;
+    const { title, description, duration, imageUrl, instructor, level, adminId } = req.body;
     const course = new Course({
       title,
       description,
       duration,
       createdBy: adminId,
+      imageUrl,
+      instructor,
+      level
     });
     await course.save();
     res.status(201).json(course);
