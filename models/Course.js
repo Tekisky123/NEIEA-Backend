@@ -46,7 +46,7 @@ const CourseSchema = new mongoose.Schema({
   },
   whatsappLink: {
     type: String,
-    required:true,
+    required: true,
     validate: {
       validator: (v) => validator.isURL(v),
       message: 'WhatsApp link must be a valid URL'
@@ -60,6 +60,11 @@ const CourseSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Applicant',
   }],
+  Institutions: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Institution',
+  },
+  ],
 });
 
 const Course = mongoose.model('Course', CourseSchema);

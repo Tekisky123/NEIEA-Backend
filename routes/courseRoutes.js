@@ -3,6 +3,7 @@ import {
   getAllCoursesPublic,
   getCourseById,
   applyToCourse,
+  InstitutionApplyToCourse
 } from "../controllers/courseController.js";
 
 const courseRoutes = express.Router();
@@ -10,5 +11,6 @@ const courseRoutes = express.Router();
 courseRoutes.get("/getAllCourses", getAllCoursesPublic); // Get all courses
 courseRoutes.get("/getOneCourse/:id", getCourseById); // Get single course by ID
 courseRoutes.post("/apply/:id", applyToCourse); // Apply to course
+courseRoutes.post("/apply-institution/:id", InstitutionApplyToCourse); // Apply to course
 
 export default courseRoutes;

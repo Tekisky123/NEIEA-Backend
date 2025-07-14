@@ -1,6 +1,7 @@
 import Course from "../models/Course.js";
 import Applicant from "../models/Applicant.js";
 import validator from 'validator';
+import Institution from "../models/Institution.js";
 
 
 export const getAllCoursesPublic = async (req, res) => {
@@ -98,6 +99,83 @@ export const applyToCourse = async (req, res) => {
     await course.save();
 
     res.status(201).json({ message: "Application submitted successfully", applicant });
+  } catch (error) {
+    if (error.code === 11000) {
+      // Handle duplicate key error
+      return res.status(400).json({ message: "You have already applied to this course." });
+    }
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const InstitutionApplyToCourse = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      email,
+      institutionName,
+      howDidYouFindUs,
+      referredBy,
+      coordinatorName,
+      contactNumber1,
+      coordinatorEmail,
+      state,
+      city,
+      address,
+      numberOfStudents,
+      earliestStart,
+      suitableTime
+    } = req.body;
+
+    // Basic validation for required fields
+    if (
+      !email || !institutionName || !howDidYouFindUs || !referredBy || !coordinatorName || !contactNumber1 || !coordinatorEmail ||
+      !address || !state || !city || !numberOfStudents || !earliestStart || !suitableTime ||
+      !convenientTimeSlot
+    ) {
+      return res.status(400).json({ message: "All required fields must be filled." });
+    }
+
+    // Validate email format
+    if (!validator.isEmail(email)) {
+      return res.status(400).json({ message: "Please provide a valid email." });
+    }
+
+    // Validate phone number format
+    if (!validator.isMobilePhone(contactNumber1)) {
+      return res.status(400).json({ message: "Please provide a valid phone number." });
+    }
+
+    const course = await Course.findById(id);
+    if (!course) {
+      return res.status(404).json({ message: "Course not found or inactive" });
+    }
+
+    // Save application with all fields
+    const institution = new Institution({
+      course: course._id,
+      email,
+      institutionName,
+      howDidYouFindUs,
+      referredBy,
+      coordinatorName,
+      contactNumber1,
+      coordinatorEmail,
+      state,
+      city,
+      address,
+      numberOfStudents,
+      earliestStart,
+      suitableTime
+    });
+
+    await institution.save();
+
+    // Optionally, push institution to course.institution array
+    course.institutions.push(institution._id);
+    await course.save();
+
+    res.status(201).json({ message: "Institution submitted successfully", institution });
   } catch (error) {
     if (error.code === 11000) {
       // Handle duplicate key error
