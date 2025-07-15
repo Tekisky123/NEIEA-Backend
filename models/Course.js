@@ -60,7 +60,7 @@ const CourseSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Applicant',
   }],
-  Institutions: [{
+  institutions: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Institution',
   },

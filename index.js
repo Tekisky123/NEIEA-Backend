@@ -6,12 +6,17 @@ import cors from "cors";
 import donorUserRoutes from "./routes/donorUserRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
+import multer from 'multer';
+const upload = multer();
+
 
 dotenv.config();
 
 connectDB();
 
 const app = express();
+app.use(express.urlencoded({ extended: true }));
+app.use(upload.none()); // This will parse FormData bodies with no files
 
 app.use(express.json());
 app.use(cors({

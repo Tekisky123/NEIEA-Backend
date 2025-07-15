@@ -110,30 +110,29 @@ export const applyToCourse = async (req, res) => {
 
 export const InstitutionApplyToCourse = async (req, res) => {
   try {
-    const { id } = req.params;
     const {
       email,
       institutionName,
       howDidYouFindUs,
       referredBy,
       coordinatorName,
-      contactNumber1,
+      coordinatorContactNumber1,
       coordinatorEmail,
       state,
       city,
       address,
       numberOfStudents,
-      earliestStart,
-      suitableTime
+      startMonth,
+      suitableTime,
+      courseIds // Array of course ObjectIds
     } = req.body;
 
     // Basic validation for required fields
     if (
-      !email || !institutionName || !howDidYouFindUs || !referredBy || !coordinatorName || !contactNumber1 || !coordinatorEmail ||
-      !address || !state || !city || !numberOfStudents || !earliestStart || !suitableTime ||
-      !convenientTimeSlot
+      !email || !institutionName || !howDidYouFindUs || !referredBy || !coordinatorName || !coordinatorContactNumber1 || !coordinatorEmail ||
+      !address || !state || !city || !numberOfStudents || !startMonth || !suitableTime || !courseIds || !Array.isArray(courseIds) || courseIds.length === 0
     ) {
-      return res.status(400).json({ message: "All required fields must be filled." });
+      return res.status(400).json({ message: "All required fields must be filled, including at least one course." });
     }
 
     // Validate email format
@@ -142,38 +141,41 @@ export const InstitutionApplyToCourse = async (req, res) => {
     }
 
     // Validate phone number format
-    if (!validator.isMobilePhone(contactNumber1)) {
+    if (!validator.isMobilePhone(coordinatorContactNumber1)) {
       return res.status(400).json({ message: "Please provide a valid phone number." });
     }
 
-    const course = await Course.findById(id);
-    if (!course) {
-      return res.status(404).json({ message: "Course not found or inactive" });
+    // Check all courseIds exist
+    const foundCourses = await Course.find({ _id: { $in: courseIds } });
+    if (foundCourses.length !== courseIds.length) {
+      return res.status(404).json({ message: "One or more courses not found." });
     }
 
-    // Save application with all fields
+    // Save institution with appliedCourses
     const institution = new Institution({
-      course: course._id,
       email,
       institutionName,
       howDidYouFindUs,
       referredBy,
       coordinatorName,
-      contactNumber1,
+      coordinatorContactNumber1,
       coordinatorEmail,
       state,
       city,
       address,
       numberOfStudents,
-      earliestStart,
-      suitableTime
+      suitableTime,
+      startMonth,
+      appliedCourses: courseIds
     });
 
     await institution.save();
 
-    // Optionally, push institution to course.institution array
-    course.institutions.push(institution._id);
-    await course.save();
+    // Add institution to each course's institutions array
+    await Course.updateMany(
+      { _id: { $in: courseIds } },
+      { $addToSet: { institutions: institution._id } }
+    );
 
     res.status(201).json({ message: "Institution submitted successfully", institution });
   } catch (error) {

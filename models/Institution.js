@@ -7,12 +7,10 @@ const institutionSchema = new mongoose.Schema({
         required: [true, "Email is required"],
         validate: [validator.isEmail, "Please provide a valid email"],
     },
-    course: {
+    appliedCourses: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Course",
-        unique: true,
-        required: [true, "Course is required"],
-    },
+        ref: 'Course',
+    }],
     institutionName: {
         type: String,
         required: [true, "Institution name is required"],
@@ -30,7 +28,7 @@ const institutionSchema = new mongoose.Schema({
         required: [true, "Coordinator name is required"],
         trim: true,
     },
-    contactNumber1: {
+    coordinatorContactNumber1: {
         type: String,
         required: [true, "Contact number 1 is required"],
         validate: {
@@ -45,7 +43,7 @@ const institutionSchema = new mongoose.Schema({
         required: [true, "Coordinator email is required"],
         validate: [validator.isEmail, "Please provide a valid email"],
     },
-    contactNumber2: {
+    coordinatorContactNumber2: {
         type: String,
         validate: {
             validator: function (v) {
@@ -75,7 +73,7 @@ const institutionSchema = new mongoose.Schema({
         required: [true, "Number of students is required"],
         min: [1, "Number of students must be at least 1"],
     },
-    earliestStart: {
+    startMonth: {
         type: String,
         required: [true, "Earliest start date is required"],
     },
