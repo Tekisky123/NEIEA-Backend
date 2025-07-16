@@ -12,7 +12,8 @@ import {
   updateAdmin,
   deleteAdmin,
   updateCourse,
-  deleteCourse
+  deleteCourse,
+  getAllInstitutions
 } from '../controllers/adminController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -32,5 +33,6 @@ adminRoutes.put('/courses/edit/:courseId', protect, updateCourse);
 adminRoutes.delete('/courses/delete/:courseId', protect, deleteCourse);
 
 adminRoutes.get('/donors', protect, getAllDonors);
+adminRoutes.get('/institutions', protect, getAllInstitutions);
 
 export default adminRoutes;
