@@ -2,6 +2,7 @@ import Admin from "../models/Admin.js";
 import DonorUser from "../models/DonorUser.js";
 import Student from "../models/Student.js";
 import Course from "../models/Course.js";
+import Institution from '../models/Institution.js';
 import sendDonationEmail from "../services/emailService.js";
 import jwt from "jsonwebtoken";
 import sendProgressTemplate from "../templates/sendProgressTemplate.js";
@@ -393,3 +394,18 @@ export const getAllDonors = async (req, res) => {
     });
   }
 };
+
+export const getAllInstitutions = async (req, res) => {
+  try {
+    const institutions = await Institution.find()
+      .populate({
+        path: 'appliedCourses',
+        select: '-applicants' // This will exclude the applicants field
+      });
+
+    res.status(200).json(institutions);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
