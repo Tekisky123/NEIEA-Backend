@@ -94,6 +94,6 @@ const institutionSchema = new mongoose.Schema({
 });
 
 // Create a compound index to prevent duplicate entries based on email and institution name
-institutionSchema.index({ email: 1, institutionName: 1, course: 1 }, { unique: true });
+institutionSchema.index({ email: 1 }, { unique: true });
 
 export default mongoose.model("Institution", institutionSchema);
