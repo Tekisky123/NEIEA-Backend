@@ -110,6 +110,16 @@ export const applyToCourse = async (req, res) => {
 
 export const InstitutionApplyToCourse = async (req, res) => {
   try {
+
+    // Files
+    // req.files.studentList[0] and req.files.institutionLogo[0]
+    const studentListFile = req.files.studentList ? req.files.studentList[0] : null;
+    const institutionLogoFile = req.files.institutionLogo ? req.files.institutionLogo[0] : null;
+
+    // S3 URLs
+    const studentListUrl = studentListFile ? studentListFile.location : null;
+    const institutionLogoUrl = institutionLogoFile ? institutionLogoFile.location : null;
+
     const {
       email,
       institutionName,
@@ -166,7 +176,9 @@ export const InstitutionApplyToCourse = async (req, res) => {
       numberOfStudents,
       suitableTime,
       startMonth,
-      appliedCourses: courseIds
+      appliedCourses: courseIds,
+      studentList: studentListUrl,
+      institutionLogo: institutionLogoUrl
     });
 
     await institution.save();

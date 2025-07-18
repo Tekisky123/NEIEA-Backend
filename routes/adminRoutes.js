@@ -16,6 +16,7 @@ import {
   getAllInstitutions
 } from '../controllers/adminController.js';
 import { protect } from '../middleware/authMiddleware.js';
+import upload from '../middleware/upload.js';
 
 const adminRoutes = express.Router();
 
@@ -27,7 +28,7 @@ adminRoutes.get('/getAll-admin', protect, getAllAdmins);
 adminRoutes.get('/get-admin', protect, getAdmin);
 adminRoutes.post('/assign-student', protect, assignStudent);
 adminRoutes.put('/update-student-progress', protect, updateStudentProgress);
-adminRoutes.post('/courses', protect, createCourse);
+adminRoutes.post('/courses', protect, upload, createCourse);
 adminRoutes.get('/courses', protect, getAllCourses);
 adminRoutes.put('/courses/edit/:courseId', protect, updateCourse);
 adminRoutes.delete('/courses/delete/:courseId', protect, deleteCourse);

@@ -12,10 +12,6 @@ const CourseSchema = new mongoose.Schema({
   },
   imageUrl: {
     type: String,
-    validate: {
-      validator: (v) => validator.isURL(v), // Ensures valid URL format
-      message: 'Photo URL must be a valid URL'
-    },
     default: "https://img.freepik.com/free-photo/learning-education-ideas-insight-intelligence-study-concept_53876-120116.jpg?semt=ais_hybrid&w=740"
   },
   instructor: {
