@@ -13,10 +13,11 @@ import {
   deleteAdmin,
   updateCourse,
   deleteCourse,
-  getAllInstitutions
+  getAllInstitutions,
+  createOrUpdateCarousel
 } from '../controllers/adminController.js';
 import { protect } from '../middleware/authMiddleware.js';
-import upload from '../middleware/upload.js';
+import upload, { uploadCarouselImages } from '../middleware/upload.js';
 
 const adminRoutes = express.Router();
 
@@ -32,6 +33,7 @@ adminRoutes.post('/courses', protect, upload, createCourse);
 adminRoutes.get('/courses', protect, getAllCourses);
 adminRoutes.put('/courses/edit/:courseId', protect, updateCourse);
 adminRoutes.delete('/courses/delete/:courseId', protect, deleteCourse);
+adminRoutes.post('/carousel', protect, uploadCarouselImages, createOrUpdateCarousel);
 
 adminRoutes.get('/donors', protect, getAllDonors);
 adminRoutes.get('/institutions', protect, getAllInstitutions);

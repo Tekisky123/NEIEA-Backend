@@ -3,11 +3,13 @@ import DonorUser from "../models/DonorUser.js";
 import Student from "../models/Student.js";
 import Course from "../models/Course.js";
 import Institution from '../models/Institution.js';
+import Carousel from '../models/Carousel.js';
 import sendDonationEmail from "../services/emailService.js";
 import jwt from "jsonwebtoken";
 import sendProgressTemplate from "../templates/sendProgressTemplate.js";
 import assignStudentTemplate from "../templates/assignStudentTemplate.js";
 import ErrorResponse from "../utils/errorResponse.js";
+import { deleteImagesFromS3, deleteSingleImageFromS3 } from "../utils/s3Cleanup.js";
 
 export const createAdmin = async (req, res) => {
   const { firstName, lastName, email, password, role } = req.body;
@@ -407,5 +409,93 @@ export const getAllInstitutions = async (req, res) => {
     res.status(200).json(institutions);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// Create or update carousel for a page
+export const createOrUpdateCarousel = async (req, res, next) => {
+  try {
+    const { page, headings, subTexts, ctaTexts, ctaUrls } = req.body;
+
+    // Validate required fields
+    if (!page) {
+      await deleteImagesFromS3(req.files);
+      return next(new ErrorResponse('Page name is required', 400));
+    }
+
+    // Check if files were uploaded
+    if (!req.files || req.files.length === 0) {
+      return next(new ErrorResponse('At least one image is required', 400));
+    }
+
+    // Controller validation: check images length
+    if (req.files.length > 3) {
+      await deleteImagesFromS3(req.files);
+      return next(new ErrorResponse('Carousel cannot have more than 3 images', 400));
+    }
+
+    // Parse the form data arrays (they come as strings from form data)
+    let headingsArray, subTextsArray, ctaTextsArray, ctaUrlsArray;
+    
+    try {
+      headingsArray = headings ? JSON.parse(headings) : [];
+      subTextsArray = subTexts ? JSON.parse(subTexts) : [];
+      ctaTextsArray = ctaTexts ? JSON.parse(ctaTexts) : [];
+      ctaUrlsArray = ctaUrls ? JSON.parse(ctaUrls) : [];
+    } catch (parseError) {
+      await deleteImagesFromS3(req.files);
+      return next(new ErrorResponse('Invalid JSON format in form data', 400));
+    }
+
+    // Check if carousel already exists for this page
+    const existingCarousel = await Carousel.findOne({ page });
+
+    // If updating existing carousel, handle old images
+    if (existingCarousel && existingCarousel.images && existingCarousel.images.length > 0) {
+      // Delete old images from S3
+      const oldImageKeys = existingCarousel.images.map(img => {
+        // Extract key from S3 URL
+        const urlParts = img.url.split('/');
+        return urlParts.slice(-2).join('/'); // Get the last two parts (folder/filename)
+      });
+      
+      // Delete old images from S3
+      for (const key of oldImageKeys) {
+        await deleteSingleImageFromS3(key);
+      }
+    }
+
+    // Create images array with S3 URLs and form data
+    const images = req.files.map((file, index) => ({
+      url: file.location, // S3 URL
+      heading: headingsArray[index] || null,
+      subText: subTextsArray[index] || null,
+      ctaText: ctaTextsArray[index] || null,
+      ctaUrl: ctaUrlsArray[index] || null
+    }));
+
+    // Upsert carousel (create or update)
+    const carousel = await Carousel.findOneAndUpdate(
+      { page },
+      { page, images },
+      { 
+        new: true, 
+        upsert: true, 
+        runValidators: true 
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      data: carousel,
+      message: existingCarousel ? 'Carousel updated successfully' : 'Carousel created successfully'
+    });
+
+  } catch (error) {
+    // Clean up uploaded images if any error occurs
+    if (req.files && req.files.length > 0) {
+      await deleteImagesFromS3(req.files);
+    }
+    next(error);
   }
 };
