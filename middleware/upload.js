@@ -26,6 +26,7 @@ const upload = multer({
   storage: multerS3({
     s3: s3,
     bucket: process.env.AWSS_BUCKET_NAME,
+    acl: 'public-read',
     contentType: multerS3.AUTO_CONTENT_TYPE,
     key: function (req, file, cb) {
       cb(null, `courses/${Date.now().toString()}-${file.originalname}`);
@@ -56,5 +57,21 @@ const uploadInstitutionFiles = multer({
   { name: 'institutionLogo', maxCount: 1 }
 ]);
 
+const uploadCarouselImages = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: process.env.AWSS_BUCKET_NAME,
+    // acl: 'public-read',
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    key: function (req, file, cb) {
+      cb(null, `carousel/${Date.now().toString()}-${file.originalname}`);
+    },
+  }),
+  limits: { fileSize: 1000000 }, // 1MB limit
+  fileFilter: function (req, file, cb) {
+    checkFileType(file, cb);
+  },
+}).array('images', 3); // Allow up to 3 images
+
 export default upload;
-export { uploadInstitutionFiles };
+export { uploadInstitutionFiles, uploadCarouselImages };
