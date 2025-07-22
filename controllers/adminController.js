@@ -10,6 +10,7 @@ import sendProgressTemplate from "../templates/sendProgressTemplate.js";
 import assignStudentTemplate from "../templates/assignStudentTemplate.js";
 import ErrorResponse from "../utils/errorResponse.js";
 import { deleteImagesFromS3, deleteSingleImageFromS3 } from "../utils/s3Cleanup.js";
+import VideoCard from "../models/VideoCard.js";
 
 export const createAdmin = async (req, res) => {
   const { firstName, lastName, email, password, role } = req.body;
