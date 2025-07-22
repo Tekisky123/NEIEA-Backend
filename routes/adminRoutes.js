@@ -41,8 +41,8 @@ adminRoutes.post('/carousel', protect, uploadCarouselImages, createOrUpdateCarou
 adminRoutes.get('/donors', protect, getAllDonors);
 adminRoutes.get('/institutions', protect, getAllInstitutions);
 
-adminRoutes.post('/admin/video-cards', protect, addVideoCard);
-adminRoutes.put('/admin/video-cards/:id', protect, updateVideoCard);
-adminRoutes.delete('/admin/video-cards/:id', protect, deleteVideoCard);
+adminRoutes.post('/video-cards', protect, addVideoCard);
+adminRoutes.put('/video-cards/:id', protect, updateVideoCard);
+adminRoutes.delete('/video-cards/:id', protect, deleteVideoCard);
 
 export default adminRoutes;
