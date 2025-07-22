@@ -499,3 +499,37 @@ export const createOrUpdateCarousel = async (req, res, next) => {
     next(error);
   }
 };
+
+// Add a new video card
+export const addVideoCard = async (req, res) => {
+  try {
+    const card = new VideoCard(req.body);
+    await card.save();
+    res.json({ success: true, data: card });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+// Update a video card
+export const updateVideoCard = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const card = await VideoCard.findByIdAndUpdate(id, req.body, { new: true });
+    if (!card) return res.status(404).json({ success: false, message: 'Not found' });
+    res.json({ success: true, data: card });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+// Delete a video card
+export const deleteVideoCard = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await VideoCard.findByIdAndDelete(id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};

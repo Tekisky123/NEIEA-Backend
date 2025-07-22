@@ -7,6 +7,7 @@ import donorUserRoutes from "./routes/donorUserRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
 import carouselRoutes from "./routes/carouselRoutes.js";
+import videoCardsRoutes from "./routes/videoCardsRoutes.js";
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -34,6 +35,7 @@ app.use("/donor", donorUserRoutes);
 app.use("/admin", adminRoutes);
 app.use("/course", courseRoutes);
 app.use("/carousel", carouselRoutes);
+app.use("/video-cards", videoCardsRoutes);
 
 const PORT = process.env.PORT || 5000;
 
