@@ -14,7 +14,10 @@ import {
   updateCourse,
   deleteCourse,
   getAllInstitutions,
-  createOrUpdateCarousel
+  createOrUpdateCarousel,
+  addVideoCard,
+  updateVideoCard,
+  deleteVideoCard
 } from '../controllers/adminController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import upload, { uploadCarouselImages } from '../middleware/upload.js';
@@ -37,5 +40,9 @@ adminRoutes.post('/carousel', protect, uploadCarouselImages, createOrUpdateCarou
 
 adminRoutes.get('/donors', protect, getAllDonors);
 adminRoutes.get('/institutions', protect, getAllInstitutions);
+
+adminRoutes.post('/admin/video-cards', protect, addVideoCard);
+adminRoutes.put('/admin/video-cards/:id', protect, updateVideoCard);
+adminRoutes.delete('/admin/video-cards/:id', protect, deleteVideoCard);
 
 export default adminRoutes;
