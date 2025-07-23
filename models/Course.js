@@ -48,6 +48,11 @@ const CourseSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Admin',
   },
+  updatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Admin',
+    default: null
+  },
   applicants: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Applicant',

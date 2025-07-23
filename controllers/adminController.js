@@ -317,23 +317,75 @@ export const getAllCourses = async (req, res) => {
 };
 
 export const updateCourse = async (req, res) => {
+  const { courseId } = req.params;
+  const {
+    title,
+    description,
+    duration,
+    level,
+    fees,
+    targetAudience,
+    whatsappLink
+  } = req.body;
+
+  // Validate required fields
+  if (!title || !description || !duration || !level || !fees || !targetAudience || !whatsappLink) {
+    if (req.file) {
+      // Clean up uploaded image if validation fails
+      await deleteImagesFromS3([req.file]);
+    }
+    return res.status(400).json({ success: false, message: "All fields are required." });
+  }
+
+  let course;
   try {
-    const { courseId } = req.params;
-    const { title, description } = req.body;
-
-    const updatedCourse = await Course.findByIdAndUpdate(
-      courseId,
-      { title, description },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedCourse) {
-      return res.status(404).json({ message: "Course not found" });
+    course = await Course.findById(courseId);
+    if (!course) {
+      if (req.file) {
+        await deleteImagesFromS3([req.file]);
+      }
+      return res.status(404).json({ success: false, message: "Course not found." });
     }
 
-    res.status(200).json(updatedCourse);
+    let oldImageKey = null;
+    let newImageUrl = course.imageUrl;
+
+    // If a new image is uploaded, prepare to delete the old one
+    if (req.file) {
+      // Save the new image URL
+      newImageUrl = req.file.location;
+      // Extract the S3 key from the old image URL if it exists
+      if (course.imageUrl) {
+        const urlParts = course.imageUrl.split('/');
+        oldImageKey = urlParts.slice(-2).join('/');
+      }
+    }
+
+    // Update the course fields
+    course.title = title;
+    course.description = description;
+    course.duration = duration;
+    course.level = level;
+    course.fees = fees;
+    course.targetAudience = targetAudience;
+    course.whatsappLink = whatsappLink;
+    course.updatedBy = req.user.id;
+    course.imageUrl = newImageUrl;
+
+    await course.save();
+
+    // If a new image was uploaded and there was an old image, delete the old image from S3
+    if (req.file && oldImageKey) {
+      await deleteSingleImageFromS3(oldImageKey);
+    }
+
+    res.status(200).json({ success: true, data: course });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    // If a new image was uploaded but an error occurred, clean up the new image from S3
+    if (req.file) {
+      await deleteImagesFromS3([req.file]);
+    }
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
