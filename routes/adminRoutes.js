@@ -34,7 +34,7 @@ adminRoutes.post('/assign-student', protect, assignStudent);
 adminRoutes.put('/update-student-progress', protect, updateStudentProgress);
 adminRoutes.post('/courses', protect, upload, createCourse);
 adminRoutes.get('/courses', protect, getAllCourses);
-adminRoutes.put('/courses/edit/:courseId', protect, updateCourse);
+adminRoutes.put('/courses/edit/:courseId', protect, upload, updateCourse);
 adminRoutes.delete('/courses/delete/:courseId', protect, deleteCourse);
 adminRoutes.post('/carousel', protect, uploadCarouselImages, createOrUpdateCarousel);
 
