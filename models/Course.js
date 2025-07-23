@@ -14,10 +14,6 @@ const CourseSchema = new mongoose.Schema({
     type: String,
     default: "https://img.freepik.com/free-photo/learning-education-ideas-insight-intelligence-study-concept_53876-120116.jpg?semt=ais_hybrid&w=740"
   },
-  instructor: {
-    type: String,
-    required: true,
-  },
   level: {
     type: String,
     required: true,

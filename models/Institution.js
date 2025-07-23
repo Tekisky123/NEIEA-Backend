@@ -18,7 +18,6 @@ const institutionSchema = new mongoose.Schema({
     },
     howDidYouFindUs: {
         type: String,
-        required: [true, "This field is required"],
     },
     referredBy: {
         type: String,

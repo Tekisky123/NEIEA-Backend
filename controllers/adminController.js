@@ -286,7 +286,7 @@ export const updateStudentProgress = async (req, res) => {
 // Create a new course
 export const createCourse = async (req, res) => {
   try {
-    const { title, description, duration, instructor, level, fees, targetAudience, whatsappLink, adminId } = req.body;
+    const { title, description, duration, level, fees, targetAudience, whatsappLink, adminId } = req.body;
     const imageUrl = req.file ? req.file.location : null; // S3 URL is in req.file.location
     const course = new Course({
       title,
@@ -294,7 +294,6 @@ export const createCourse = async (req, res) => {
       duration,
       createdBy: adminId,
       imageUrl,
-      instructor,
       level,
       fees,
       targetAudience,
