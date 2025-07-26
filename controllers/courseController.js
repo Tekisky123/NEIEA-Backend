@@ -139,7 +139,7 @@ export const InstitutionApplyToCourse = async (req, res) => {
 
     // Basic validation for required fields
     if (
-      !email || !institutionName || !howDidYouFindUs || !referredBy || !coordinatorName || !coordinatorContactNumber1 || !coordinatorEmail ||
+      !email || !institutionName || !coordinatorName || !coordinatorContactNumber1 || !coordinatorEmail ||
       !address || !state || !city || !numberOfStudents || !startMonth || !suitableTime || !courseIds || !Array.isArray(courseIds) || courseIds.length === 0
     ) {
       return res.status(400).json({ message: "All required fields must be filled, including at least one course." });
