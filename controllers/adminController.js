@@ -11,6 +11,9 @@ import assignStudentTemplate from "../templates/assignStudentTemplate.js";
 import ErrorResponse from "../utils/errorResponse.js";
 import { deleteImagesFromS3, deleteSingleImageFromS3 } from "../utils/s3Cleanup.js";
 import VideoCard from "../models/VideoCard.js";
+import HeroSection from "../models/HeroSection.js";
+import BulletPoint from "../models/BulletPoint.js";
+import Testimonial from "../models/Testimonial.js";
 
 export const createAdmin = async (req, res) => {
   const { firstName, lastName, email, password, role } = req.body;
@@ -580,6 +583,105 @@ export const deleteVideoCard = async (req, res) => {
   try {
     const { id } = req.params;
     await VideoCard.findByIdAndDelete(id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+
+// Add a new hero section
+export const addHeroSection = async (req, res) => {
+  try {
+    const heroSection = new HeroSection(req.body);
+    await heroSection.save();
+    res.json({ success: true, data: heroSection });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+// Update a hero section
+export const updateHeroSection = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const heroSection = await HeroSection.findByIdAndUpdate(id, req.body, { new: true });
+    if (!heroSection) return res.status(404).json({ success: false, message: 'Not found' });
+    res.json({ success: true, data: heroSection });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+// Delete a hero section
+export const deleteHeroSection = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await HeroSection.findByIdAndDelete(id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+// Bullet Point Admin Functions
+export const addBulletPoint = async (req, res) => {
+  try {
+    const bulletPoint = new BulletPoint(req.body);
+    await bulletPoint.save();
+    res.json({ success: true, data: bulletPoint });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+export const updateBulletPoint = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const bulletPoint = await BulletPoint.findByIdAndUpdate(id, req.body, { new: true });
+    if (!bulletPoint) return res.status(404).json({ success: false, message: 'Not found' });
+    res.json({ success: true, data: bulletPoint });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+export const deleteBulletPoint = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await BulletPoint.findByIdAndDelete(id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+// Testimonial Admin Functions
+export const addTestimonial = async (req, res) => {
+  try {
+    const testimonial = new Testimonial(req.body);
+    await testimonial.save();
+    res.json({ success: true, data: testimonial });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+export const updateTestimonial = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const testimonial = await Testimonial.findByIdAndUpdate(id, req.body, { new: true });
+    if (!testimonial) return res.status(404).json({ success: false, message: 'Not found' });
+    res.json({ success: true, data: testimonial });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+export const deleteTestimonial = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await Testimonial.findByIdAndDelete(id);
     res.json({ success: true });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
