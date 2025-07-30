@@ -25,13 +25,17 @@ dotenv.config();
 connectDB();
 
 const app = express();
-app.use(express.urlencoded({ extended: true }));
 
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(cors({
-    origin:"*",
-    methods:"GET,POST,PUT,PATCH,DELETE,ALL"
+    origin: [
+        'https://frontend.vercel.app',
+        'https://frontend-dev.vercel.app',
+        'http://localhost:5173'
+    ],
+    methods: "GET,POST,PUT,PATCH,DELETE,ALL"
 }));
 
 app.use("/donation", donationRoutes);
