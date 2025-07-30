@@ -11,6 +11,7 @@ import videoCardsRoutes from "./routes/videoCardsRoutes.js";
 import heroSectionRoutes from "./routes/heroSectionRoutes.js";
 import bulletPointsRoutes from "./routes/bulletPointsRoutes.js";
 import testimonialsRoutes from "./routes/testimonialsRoutes.js";
+import sectionsRoutes from "./routes/sectionsRoutes.js";
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -42,6 +43,7 @@ app.use("/video-cards", videoCardsRoutes);
 app.use("/hero-section", heroSectionRoutes);
 app.use("/bullet-points", bulletPointsRoutes);
 app.use("/testimonials", testimonialsRoutes);
+app.use("/sections", sectionsRoutes);
 
 const PORT = process.env.PORT || 5000;
 

@@ -29,10 +29,16 @@ import {
   
   addTestimonial,
   updateTestimonial,
-  deleteTestimonial
+  deleteTestimonial,
+  
+  addSection,
+  updateSection,
+  deleteSection,
+  getAllSections,
+  getSectionById
 } from '../controllers/adminController.js';
 import { protect } from '../middleware/authMiddleware.js';
-import upload, { uploadCarouselImages } from '../middleware/upload.js';
+import upload, { uploadCarouselImages, uploadSectionsImage } from '../middleware/upload.js';
 
 const adminRoutes = express.Router();
 
@@ -69,5 +75,12 @@ adminRoutes.delete('/bullet-points/:id', protect, deleteBulletPoint);
 adminRoutes.post('/testimonials', protect, addTestimonial);
 adminRoutes.put('/testimonials/:id', protect, updateTestimonial);
 adminRoutes.delete('/testimonials/:id', protect, deleteTestimonial);
+
+// Sections Admin Routes
+adminRoutes.post('/sections', protect, uploadSectionsImage, addSection);
+adminRoutes.get('/sections', protect, getAllSections);
+adminRoutes.get('/sections/:id', protect, getSectionById);
+adminRoutes.put('/sections/:id', protect, uploadSectionsImage, updateSection);
+adminRoutes.delete('/sections/:id', protect, deleteSection);
 
 export default adminRoutes;
