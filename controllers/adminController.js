@@ -14,6 +14,7 @@ import VideoCard from "../models/VideoCard.js";
 import HeroSection from "../models/HeroSection.js";
 import BulletPoint from "../models/BulletPoint.js";
 import Testimonial from "../models/Testimonial.js";
+import Section from "../models/Section.js";
 
 export const createAdmin = async (req, res) => {
   const { firstName, lastName, email, password, role } = req.body;
@@ -685,5 +686,198 @@ export const deleteTestimonial = async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+// Sections Admin Functions with S3 Image Handling
+export const addSection = async (req, res, next) => {
+  try {
+    const { page, heading, subHeading, body, orientation } = req.body;
+
+    // Validate required fields
+    if (!page || !heading || !subHeading || !body || !orientation) {
+      if (req.file) {
+        // Clean up uploaded image if validation fails
+        await deleteImagesFromS3([req.file]);
+      }
+      return next(new ErrorResponse('All fields are required', 400));
+    }
+
+    // Validate orientation
+    if (!['left', 'right'].includes(orientation)) {
+      if (req.file) {
+        await deleteImagesFromS3([req.file]);
+      }
+      return next(new ErrorResponse('Orientation must be either "left" or "right"', 400));
+    }
+
+    // Handle image upload (optional)
+    const imageUrl = req.file ? req.file.location : null; // S3 URL if uploaded
+
+    const section = new Section({
+      page,
+      heading,
+      subHeading,
+      body,
+      imageUrl,
+      orientation
+    });
+
+    await section.save();
+
+    res.status(201).json({
+      success: true,
+      data: section,
+      message: 'New section created successfully'
+    });
+
+  } catch (error) {
+    // Clean up uploaded image if any error occurs
+    if (req.file) {
+      await deleteImagesFromS3([req.file]);
+    }
+    next(error);
+  }
+};
+
+export const updateSection = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { page, heading, subHeading, body, orientation } = req.body;
+
+    // Validate required fields
+    if (!page || !heading || !subHeading || !body || !orientation) {
+      if (req.file) {
+        await deleteImagesFromS3([req.file]);
+      }
+      return next(new ErrorResponse('All fields are required', 400));
+    }
+
+    // Validate orientation
+    if (!['left', 'right'].includes(orientation)) {
+      if (req.file) {
+        await deleteImagesFromS3([req.file]);
+      }
+      return next(new ErrorResponse('Orientation must be either "left" or "right"', 400));
+    }
+
+    // Find existing Section
+    const existingSection = await Section.findById(id);
+    if (!existingSection) {
+      if (req.file) {
+        await deleteImagesFromS3([req.file]);
+      }
+      return next(new ErrorResponse('Section not found', 404));
+    }
+
+    let oldImageKey = null;
+    let newImageUrl = existingSection.imageUrl;
+
+    // If a new image is uploaded, prepare to delete the old one
+    if (req.file) {
+      newImageUrl = req.file.location;
+      
+      // Extract the S3 key from the old image URL if it exists
+      if (existingSection.imageUrl) {
+        const urlParts = existingSection.imageUrl.split('/');
+        oldImageKey = urlParts.slice(-2).join('/'); // Get the last two parts (folder/filename)
+      }
+    }
+
+    // Update the Section fields
+    existingSection.page = page;
+    existingSection.heading = heading;
+    existingSection.subHeading = subHeading;
+    existingSection.body = body;
+    existingSection.orientation = orientation;
+    existingSection.imageUrl = newImageUrl;
+
+    await existingSection.save();
+
+    // If a new image was uploaded and there was an old image, delete the old image from S3
+    if (req.file && oldImageKey) {
+      await deleteSingleImageFromS3(oldImageKey);
+    }
+
+    res.status(200).json({
+      success: true,
+      data: existingSection,
+      message: 'Section updated successfully'
+    });
+
+  } catch (error) {
+    // If a new image was uploaded but an error occurred, clean up the new image from S3
+    if (req.file) {
+      await deleteImagesFromS3([req.file]);
+    }
+    next(error);
+  }
+};
+
+export const deleteSection = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // Find the Section to get the image URL before deletion
+    const section = await Section.findById(id);
+    if (!section) {
+      return next(new ErrorResponse('Section not found', 404));
+    }
+
+    // Extract the S3 key from the image URL
+    let imageKey = null;
+    if (section.imageUrl) {
+      const urlParts = section.imageUrl.split('/');
+      imageKey = urlParts.slice(-2).join('/'); // Get the last two parts (folder/filename)
+    }
+
+    // Delete the Section from database
+    await Section.findByIdAndDelete(id);
+
+    // Delete the image from S3 if it exists
+    if (imageKey) {
+      await deleteSingleImageFromS3(imageKey);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Section deleted successfully'
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get all Sections entries (for admin dashboard)
+export const getAllSections = async (req, res, next) => {
+  try {
+    const sectionEntries = await Section.find().sort({ createdAt: -1 });
+    
+    res.status(200).json({
+      success: true,
+      data: sectionEntries
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get Section by ID (for admin editing)
+export const getSectionById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    const section = await Section.findById(id);
+    if (!section) {
+      return next(new ErrorResponse('Section not found', 404));
+    }
+
+    res.status(200).json({
+      success: true,
+      data: section
+    });
+  } catch (error) {
+    next(error);
   }
 };
