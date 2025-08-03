@@ -62,6 +62,18 @@ const CourseSchema = new mongoose.Schema({
     ref: 'Institution',
   },
   ],
+  timeSlots:{
+    type: [String],
+    required: true,
+    validate: {
+      validator: (timeSlots) => timeSlots.length > 0,
+      message: 'Time slots must not be empty'
+    }
+  },
+  isNew:{
+    type: Boolean,
+    default: false
+  }
 });
 
 const Course = mongoose.model('Course', CourseSchema);

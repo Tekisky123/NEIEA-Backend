@@ -290,7 +290,7 @@ export const updateStudentProgress = async (req, res) => {
 // Create a new course
 export const createCourse = async (req, res) => {
   try {
-    const { title, description, duration, level, fees, targetAudience, whatsappLink, adminId } = req.body;
+    const { title, description, duration, level, fees, targetAudience, whatsappLink, adminId, timeSlots, isNew } = req.body;
     const imageUrl = req.file ? req.file.location : null; // S3 URL is in req.file.location
     const course = new Course({
       title,
@@ -301,7 +301,9 @@ export const createCourse = async (req, res) => {
       level,
       fees,
       targetAudience,
-      whatsappLink
+      whatsappLink,
+      timeSlots,
+      isNew: (isNew === true || isNew === 'true') ? true : false
     });
     await course.save();
     res.status(201).json(course);
@@ -313,7 +315,7 @@ export const createCourse = async (req, res) => {
 // Get all courses
 export const getAllCourses = async (req, res) => {
   try {
-    const courses = await Course.find().populate("applicants"); // ✅ now pulls full data
+    const courses = await Course.find().populate("applicants").populate("institutions"); // ✅ now pulls full data
     res.status(200).json(courses);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -329,18 +331,19 @@ export const updateCourse = async (req, res) => {
     level,
     fees,
     targetAudience,
-    whatsappLink
+    whatsappLink,
+    timeSlots,
+    isNew
   } = req.body;
-
+  console.log(req.body)
   // Validate required fields
-  if (!title || !description || !duration || !level || !fees || !targetAudience || !whatsappLink) {
+  if (!title || !description || !duration || !level || !fees || !targetAudience || !whatsappLink || !timeSlots) {
     if (req.file) {
       // Clean up uploaded image if validation fails
       await deleteImagesFromS3([req.file]);
     }
     return res.status(400).json({ success: false, message: "All fields are required." });
   }
-
   let course;
   try {
     course = await Course.findById(courseId);
@@ -375,6 +378,8 @@ export const updateCourse = async (req, res) => {
     course.whatsappLink = whatsappLink;
     course.updatedBy = req.user.id;
     course.imageUrl = newImageUrl;
+    course.timeSlots = timeSlots;
+    course.isNew = (isNew === true || isNew === 'true') ? true : false;
 
     await course.save();
 

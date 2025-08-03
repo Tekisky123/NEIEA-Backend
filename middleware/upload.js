@@ -38,19 +38,41 @@ const upload = multer({
   },
 }).single('image');
 
+// Simple file type validation
+function checkFileTypeForuploadInstitutionFiles(file, cb) {
+  // Define allowed file types
+  const allowedStudentListTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel', 'image/jpeg', 'image/png'];
+  const allowedLogoTypes = ['image/jpeg', 'image/png'];
+
+  // Check file type based on fieldname
+  if (file.fieldname === 'studentList' && allowedStudentListTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else if (file.fieldname === 'institutionLogo' && allowedLogoTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Invalid file type!'));
+  }
+}
+
 const uploadInstitutionFiles = multer({
   storage: multerS3({
     s3: s3,
     bucket: process.env.AWSS_BUCKET_NAME,
-    // acl: 'public-read',
     contentType: multerS3.AUTO_CONTENT_TYPE,
     key: function (req, file, cb) {
-      cb(null, `institutions/${Date.now().toString()}-${file.originalname}`);
+      const filePath = `institutions/${Date.now().toString()}-${file.originalname}`;
+      cb(null, filePath);
     },
   }),
-  limits: { fileSize: 1000000 }, // 1MB limit
+  limits: {
+    fileSize: function (req, file, cb) {
+      // Set file size limits based on the field
+      const maxSize = file.fieldname === 'studentList' ? 10 * 1024 * 1024 : 100 * 1024 * 1024;
+      cb(null, true, maxSize);
+    },
+  },
   fileFilter: function (req, file, cb) {
-    checkFileType(file, cb);
+    checkFileTypeForuploadInstitutionFiles(file, cb);
   },
 }).fields([
   { name: 'studentList', maxCount: 1 },
