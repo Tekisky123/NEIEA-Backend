@@ -226,13 +226,12 @@ const razorpay = new Razorpay({
 
 export const createOrder = async (req, res) => {
   try {
-    const { amount, currency = "INR", receipt, notes } = req.body;
+    const { amount, currency = "INR", receipt } = req.body;
 
     const options = {
       amount: amount * 100,
       currency,
       receipt,
-      notes,
       payment_capture: 1,
     };
 
