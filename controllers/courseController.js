@@ -2,6 +2,8 @@ import Course from "../models/Course.js";
 import Applicant from "../models/Applicant.js";
 import validator from 'validator';
 import Institution from "../models/Institution.js";
+import ReferredBy from "../models/ReferredBy.js";
+import Razorpay from "razorpay";
 
 
 export const getAllCoursesPublic = async (req, res) => {
@@ -199,4 +201,99 @@ export const InstitutionApplyToCourse = async (req, res) => {
   }
 };
 
+// Get the list of referred by options for the public course application form
+export const getReferredByList = async (req, res) => {
+  try {
+    const referredByList = await ReferredBy.find();
+
+    if (!referredByList) {
+      return next(new ErrorResponse('No Referred By list found', 404));
+    }
+
+    res.status(200).json({
+      success: true,
+      data: referredByList
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
+
+export const createOrder = async (req, res) => {
+  try {
+    const { amount, currency = "INR", receipt, notes } = req.body;
+
+    const options = {
+      amount: amount * 100,
+      currency,
+      receipt,
+      notes,
+      payment_capture: 1,
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    res.status(200).json({
+      success: true,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+    });
+  } catch (error) {
+    console.error("Razorpay order error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create payment order",
+    });
+  }
+};
+
+export const verifyPayment = async (req, res) => {
+  try {
+    const {
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature,
+      courseData,
+    } = req.body;
+
+    const generatedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+      .digest("hex");
+
+    if (generatedSignature !== razorpaySignature) {
+      return res.status(400).json({
+        success: false,
+        message: "Payment verification failed",
+      });
+    }
+
+    const applicant = new Applicant({
+      ...courseData,
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature,
+      isVerified: true,
+    });
+
+    await applicant.save();
+
+    res.status(201).json({
+      success: true,
+      data: applicant,
+    });
+  } catch (error) {
+    console.error("Payment verification error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Payment verification failed",
+    });
+  }
+};
 

@@ -84,6 +84,10 @@ const applicantSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  razorpayOrderId: { type: String },
+  razorpayPaymentId: { type: String },
+  razorpaySignature: { type: String },
+  isVerified: { type: Boolean, default: false },
 });
 
 // Create a compound index to prevent duplicate entries based on email and course
