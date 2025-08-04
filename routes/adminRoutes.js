@@ -35,7 +35,12 @@ import {
   updateSection,
   deleteSection,
   getAllSections,
-  getSectionById
+  getSectionById,
+
+  addReferredBy,
+  getOneReferredBy,
+  updateReferredBy,
+  deleteReferredBy,
 } from '../controllers/adminController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import upload, { uploadCarouselImages, uploadSectionsImage } from '../middleware/upload.js';
@@ -82,5 +87,12 @@ adminRoutes.get('/sections', protect, getAllSections);
 adminRoutes.get('/sections/:id', protect, getSectionById);
 adminRoutes.put('/sections/:id', protect, uploadSectionsImage, updateSection);
 adminRoutes.delete('/sections/:id', protect, deleteSection);
+
+// Referred By Admin Routes
+adminRoutes.post('/referred-by', protect, addReferredBy);
+adminRoutes.get('/referred-by/:id', protect, getOneReferredBy);
+adminRoutes.put('/referred-by/:id', protect, updateReferredBy);
+adminRoutes.delete('/referred-by/:id', protect, deleteReferredBy);
+
 
 export default adminRoutes;
