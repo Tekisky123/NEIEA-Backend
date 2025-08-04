@@ -15,6 +15,7 @@ import HeroSection from "../models/HeroSection.js";
 import BulletPoint from "../models/BulletPoint.js";
 import Testimonial from "../models/Testimonial.js";
 import Section from "../models/Section.js";
+import ReferredBy from "../models/ReferredBy.js";
 
 export const createAdmin = async (req, res) => {
   const { firstName, lastName, email, password, role } = req.body;
@@ -497,7 +498,7 @@ export const createOrUpdateCarousel = async (req, res, next) => {
 
     // Parse the form data arrays (they come as strings from form data)
     let headingsArray, subTextsArray, ctaTextsArray, ctaUrlsArray;
-    
+
     try {
       headingsArray = headings ? JSON.parse(headings) : [];
       subTextsArray = subTexts ? JSON.parse(subTexts) : [];
@@ -519,7 +520,7 @@ export const createOrUpdateCarousel = async (req, res, next) => {
         const urlParts = img.url.split('/');
         return urlParts.slice(-2).join('/'); // Get the last two parts (folder/filename)
       });
-      
+
       // Delete old images from S3
       for (const key of oldImageKeys) {
         await deleteSingleImageFromS3(key);
@@ -539,10 +540,10 @@ export const createOrUpdateCarousel = async (req, res, next) => {
     const carousel = await Carousel.findOneAndUpdate(
       { page },
       { page, images },
-      { 
-        new: true, 
-        upsert: true, 
-        runValidators: true 
+      {
+        new: true,
+        upsert: true,
+        runValidators: true
       }
     );
 
@@ -781,7 +782,7 @@ export const updateSection = async (req, res, next) => {
     // If a new image is uploaded, prepare to delete the old one
     if (req.file) {
       newImageUrl = req.file.location;
-      
+
       // Extract the S3 key from the old image URL if it exists
       if (existingSection.imageUrl) {
         const urlParts = existingSection.imageUrl.split('/');
@@ -858,7 +859,7 @@ export const deleteSection = async (req, res, next) => {
 export const getAllSections = async (req, res, next) => {
   try {
     const sectionEntries = await Section.find().sort({ createdAt: -1 });
-    
+
     res.status(200).json({
       success: true,
       data: sectionEntries
@@ -872,7 +873,7 @@ export const getAllSections = async (req, res, next) => {
 export const getSectionById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    
+
     const section = await Section.findById(id);
     if (!section) {
       return next(new ErrorResponse('Section not found', 404));
@@ -881,6 +882,109 @@ export const getSectionById = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: section
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ReferredBy Admin Functions
+
+// Add a new referred by entry
+export const addReferredBy = async (req, res, next) => {
+  try {
+    const { name } = req.body;
+
+    // Validate required fields
+    if (!name) {
+      return next(new ErrorResponse('Name is required', 400));
+    }
+
+    // Check if a ReferredBy document already exists (we only want one document)
+    const existingReferredBy = await ReferredBy.findOne({ name });
+
+    if (existingReferredBy) {
+      return next(new ErrorResponse('Name already exists', 400));
+    }
+
+    // If no document exists, create a new one
+    const newReferredBy = new ReferredBy({
+      name
+    });
+
+    await newReferredBy.save();
+
+    res.status(201).json({
+      success: true,
+      data: newReferredBy,
+      message: 'Referred By list created successfully'
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get all Referred By entries
+export const getOneReferredBy = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const referredBy = await ReferredBy.findById(id);
+
+    if (!referredBy) {
+      return next(new ErrorResponse('No Referred By entry found', 404));
+    }
+
+    res.status(200).json({
+      success: true,
+      data: referredBy
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Update Referred By list
+export const updateReferredBy = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { name } = req.body;
+
+    // Validate required fields
+    if (!name) {
+      return next(new ErrorResponse('Name is required', 400));
+    }
+
+    const updatedReferredBy = await ReferredBy.findByIdAndUpdate(
+      id,
+      { name }, 
+      { new: true, runValidators: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      data: updatedReferredBy,
+      message: 'Referred By Name updated successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Delete Referred By list
+export const deleteReferredBy = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const deletedReferredBy = await ReferredBy.findByIdAndDelete(id);
+
+    if (!deletedReferredBy) {
+      return next(new ErrorResponse('Referred By Name not found', 404));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Referred By Name deleted successfully'
     });
   } catch (error) {
     next(error);
