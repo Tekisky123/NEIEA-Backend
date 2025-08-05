@@ -5,7 +5,6 @@ const applicantSchema = new mongoose.Schema({
   course: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Course",
-    unique: true,
     required: [true, "Course is required"],
   },
   fullName: {
