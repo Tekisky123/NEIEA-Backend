@@ -4,6 +4,7 @@ import validator from 'validator';
 import Institution from "../models/Institution.js";
 import ReferredBy from "../models/ReferredBy.js";
 import Razorpay from "razorpay";
+import crypto from "crypto";
 
 
 export const getAllCoursesPublic = async (req, res) => {
@@ -219,6 +220,58 @@ export const getReferredByList = async (req, res) => {
   }
 };
 
+export const verifyApplyCourseData = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      fullName,
+      email,
+      phone,
+      motherTongue,
+      age,
+      gender,
+      isStudent,
+      state,
+      city,
+      whatsappNumber,
+      referredBy,
+      convenientTimeSlot,
+    } = req.body;
+
+    // Basic validation for required fields
+    if (
+      !fullName || !email || !phone || !motherTongue || !age || !gender ||
+      !isStudent || !state || !city || !whatsappNumber || !referredBy ||
+      !convenientTimeSlot
+    ) {
+      return res.status(400).json({ success:false,message: "All required fields must be filled." });
+    }
+
+    // Validate email format
+    if (!validator.isEmail(email)) {
+      return res.status(400).json({ success:false,message: "Please provide a valid email." });
+    }
+
+    // Validate phone number format
+    if (!validator.isMobilePhone(phone)) {
+      return res.status(400).json({ success:false,message: "Please provide a valid phone number." });
+    }
+
+    const course = await Course.findById(id);
+    if (!course) {
+      return res.status(404).json({ success:false,message: "Course not found or inactive" });
+    }
+
+    res.status(200).json({ success:true, message: "Your Application is ready to procced to payment now!" });
+  } catch (error) {
+    if (error.code === 11000) {
+      // Handle duplicate key error
+      return res.status(400).json({ success:false,message: "You have already applied to this course." });
+    }
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -283,9 +336,14 @@ export const verifyPayment = async (req, res) => {
 
     await applicant.save();
 
+    const course = await Course.findById(courseData.course);
+    course.applicants.push(applicant._id);
+    await course.save();
+
     res.status(201).json({
       success: true,
       data: applicant,
+      message: "Payment verification success"
     });
   } catch (error) {
     console.error("Payment verification error:", error);
