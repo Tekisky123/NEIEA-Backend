@@ -38,6 +38,22 @@ const upload = multer({
   },
 }).single('image');
 
+const uploadVideoThumbnail = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: process.env.AWSS_BUCKET_NAME,
+    // acl: 'public-read',
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    key: function (req, file, cb) {
+      cb(null, `videoThumbnail/${Date.now().toString()}-${file.originalname}`);
+    },
+  }),
+  limits: { fileSize: 1000000 }, // 1MB limit
+  fileFilter: function (req, file, cb) {
+    checkFileType(file, cb);
+  },
+}).single('thumbnail');
+
 // Simple file type validation
 function checkFileTypeForuploadInstitutionFiles(file, cb) {
   // Define allowed file types
@@ -112,4 +128,4 @@ const uploadSectionsImage = multer({
 }).single('image');
 
 export default upload;
-export { uploadInstitutionFiles, uploadCarouselImages, uploadSectionsImage };
+export { uploadInstitutionFiles, uploadCarouselImages, uploadSectionsImage, uploadVideoThumbnail };

@@ -336,7 +336,6 @@ export const updateCourse = async (req, res) => {
     timeSlots,
     isNew
   } = req.body;
-  console.log(req.body)
   // Validate required fields
   if (!title || !description || !duration || !level || !fees || !targetAudience || !whatsappLink || !timeSlots) {
     if (req.file) {
@@ -565,7 +564,11 @@ export const createOrUpdateCarousel = async (req, res, next) => {
 // Add a new video card
 export const addVideoCard = async (req, res) => {
   try {
-    const card = new VideoCard(req.body);
+    const thumbnail = req.file ? req.file.location : null; // S3 URL is in req.file.location
+    const card = new VideoCard({
+      ...req.body,
+      thumbnail
+    });
     await card.save();
     res.json({ success: true, data: card });
   } catch (err) {
@@ -577,7 +580,26 @@ export const addVideoCard = async (req, res) => {
 export const updateVideoCard = async (req, res) => {
   try {
     const { id } = req.params;
-    const card = await VideoCard.findByIdAndUpdate(id, req.body, { new: true });
+    const updateData = req.body;
+
+    // Retrieve the existing video card data
+    const existingCard = await VideoCard.findById(id);
+    if (!existingCard) {
+      return res.status(404).json({ success: false, message: 'Video card not found' });
+    }
+
+    // If a new file was uploaded, update the thumbnail URL
+    if (req.file) {
+      // Delete the old thumbnail from S3
+      if (existingCard.thumbnail) {
+        const oldFileKey = existingCard.thumbnail.split('/').pop(); // Extract the file key from the URL
+        await deleteSingleImageFromS3(oldFileKey);
+      }
+
+      updateData.thumbnail = req.file.location; // Update with the new file's URL
+    }
+
+    const card = await VideoCard.findByIdAndUpdate(id, updateData, { new: true });
     if (!card) return res.status(404).json({ success: false, message: 'Not found' });
     res.json({ success: true, data: card });
   } catch (err) {
@@ -589,6 +611,19 @@ export const updateVideoCard = async (req, res) => {
 export const deleteVideoCard = async (req, res) => {
   try {
     const { id } = req.params;
+    // Retrieve the video card data to get the thumbnail URL
+    const videoCard = await VideoCard.findById(id);
+    if (!videoCard) {
+      return res.status(404).json({ success: false, message: 'Video card not found' });
+    }
+
+    // Delete the thumbnail image from S3
+    if (videoCard.thumbnail) {
+      const fileKey = videoCard.thumbnail.split('/').pop(); // Extract the file key from the URL
+      await deleteSingleImageFromS3(fileKey);
+    }
+
+    // Delete the video card from the database
     await VideoCard.findByIdAndDelete(id);
     res.json({ success: true });
   } catch (err) {
@@ -957,7 +992,7 @@ export const updateReferredBy = async (req, res, next) => {
 
     const updatedReferredBy = await ReferredBy.findByIdAndUpdate(
       id,
-      { name }, 
+      { name },
       { new: true, runValidators: true }
     );
 

@@ -43,7 +43,7 @@ import {
   deleteReferredBy,
 } from '../controllers/adminController.js';
 import { protect } from '../middleware/authMiddleware.js';
-import upload, { uploadCarouselImages, uploadSectionsImage } from '../middleware/upload.js';
+import upload, { uploadCarouselImages, uploadSectionsImage, uploadVideoThumbnail } from '../middleware/upload.js';
 
 const adminRoutes = express.Router();
 
@@ -65,8 +65,8 @@ adminRoutes.get('/institutions', protect, getAllInstitutions);
 adminRoutes.delete('/courses/delete/:courseId', protect, deleteCourse);
 adminRoutes.post('/carousel', protect, uploadCarouselImages, createOrUpdateCarousel);
 
-adminRoutes.post('/video-cards', protect, addVideoCard);
-adminRoutes.put('/video-cards/:id', protect, updateVideoCard);
+adminRoutes.post('/video-cards', protect, uploadVideoThumbnail, addVideoCard);
+adminRoutes.put('/video-cards/:id', protect,uploadVideoThumbnail, updateVideoCard);
 adminRoutes.delete('/video-cards/:id', protect, deleteVideoCard);
 
 adminRoutes.post('/hero-section', protect, addHeroSection);
