@@ -1025,3 +1025,56 @@ export const deleteReferredBy = async (req, res, next) => {
     next(error);
   }
 };
+
+import mongoose from "mongoose";
+import { Parser } from "json2csv";
+import archiver from "archiver";
+
+export const downloadBackup = async (req, res) => {
+  try {
+    const { format } = req.query; // json or csv
+    if (!["json", "csv"].includes(format)) {
+      return res.status(400).json({ message: "Invalid format" });
+    }
+
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=backup-${Date.now()}.zip`
+    );
+
+    const archive = archiver("zip", { zlib: { level: 9 } });
+    archive.pipe(res);
+
+    const collections = await mongoose.connection.db.listCollections().toArray();
+
+    for (const coll of collections) {
+      const name = coll.name;
+      const data = await mongoose.connection.db.collection(name).find().toArray();
+
+      if (format === "json") {
+        // Always append file, even if empty
+        archive.append(JSON.stringify(data, null, 2), { name: `${name}.json` });
+      } else if (format === "csv") {
+        if (data.length > 0) {
+          const parser = new Parser({ fields: Object.keys(data[0]) });
+          const csv = parser.parse(data);
+          archive.append(csv, { name: `${name}.csv` });
+        } else {
+          // Empty CSV file for empty collection
+          archive.append("", { name: `${name}.csv` });
+        }
+      }
+    }
+
+    await archive.finalize();
+  } catch (err) {
+    console.error("Backup error:", err);
+    if (!res.headersSent) {
+      res.status(500).json({ message: "Backup failed", error: err.message });
+    }
+  }
+};
+
+
+

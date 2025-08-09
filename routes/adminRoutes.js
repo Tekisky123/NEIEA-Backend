@@ -41,6 +41,8 @@ import {
   getOneReferredBy,
   updateReferredBy,
   deleteReferredBy,
+
+  downloadBackup
 } from '../controllers/adminController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import upload, { uploadCarouselImages, uploadSectionsImage, uploadVideoThumbnail } from '../middleware/upload.js';
@@ -94,5 +96,6 @@ adminRoutes.get('/referred-by/:id', protect, getOneReferredBy);
 adminRoutes.put('/referred-by/:id', protect, updateReferredBy);
 adminRoutes.delete('/referred-by/:id', protect, deleteReferredBy);
 
+adminRoutes.get('/db-backup', protect, downloadBackup);
 
 export default adminRoutes;
