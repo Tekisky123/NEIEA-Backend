@@ -14,6 +14,7 @@ import testimonialsRoutes from "./routes/testimonialsRoutes.js";
 import sectionsRoutes from "./routes/sectionsRoutes.js";
 import volunteerRoutes from "./routes/volunteerRoutes.js";
 import contactRouters from "./routes/contactRoutes.js";
+import subscribeRoutes from "./routes/subscribeRoutes.js";
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -52,6 +53,7 @@ app.use("/testimonials", testimonialsRoutes);
 app.use("/sections", sectionsRoutes);
 app.use("/volunteer", volunteerRoutes);
 app.use("/contact", contactRouters);
+app.use("/subscribe", subscribeRoutes);
 
 const PORT = process.env.PORT || 5000;
 
