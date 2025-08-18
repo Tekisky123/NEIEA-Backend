@@ -55,6 +55,13 @@ app.use("/volunteer", volunteerRoutes);
 app.use("/contact", contactRouters);
 app.use("/subscribe", subscribeRoutes);
 
+app.use((err, req, res, next)=>{
+    return res.status(err.statusCode || 500).json({
+        success: false,
+        message: err.message || 'Somthing Went Wrong!',
+    })
+})
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

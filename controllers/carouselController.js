@@ -31,10 +31,10 @@ export const createOrUpdateCarousel = async (req, res, next) => {
     const carousel = await Carousel.findOneAndUpdate(
       { page },
       { page, images },
-      { 
-        new: true, 
-        upsert: true, 
-        runValidators: true 
+      {
+        new: true,
+        upsert: true,
+        runValidators: true
       }
     );
 
@@ -54,13 +54,20 @@ export const getCarousel = async (req, res, next) => {
     const { page } = req.params;
 
     if (!page) {
-      return next(new ErrorResponse('Page parameter is required', 400));
+      return res.status(400).json({
+        success: false,
+        message:`Page parameter is required`,
+      })
     }
 
     const carousel = await Carousel.findOne({ page });
 
     if (!carousel) {
-      return next(new ErrorResponse(`Carousel not found for page: ${page}`, 404));
+      return res.status(404).json({
+        success: false,
+        message:`Carousel not found for page: ${page}`,
+        data: []
+      })
     }
 
     res.status(200).json({

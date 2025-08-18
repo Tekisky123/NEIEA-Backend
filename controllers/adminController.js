@@ -736,7 +736,7 @@ export const addSection = async (req, res, next) => {
     const { page, heading, subHeading, body, orientation } = req.body;
 
     // Validate required fields
-    if (!page || !heading || !subHeading || !body || !orientation) {
+    if (!page || !heading || !body || !orientation) {
       if (req.file) {
         // Clean up uploaded image if validation fails
         await deleteImagesFromS3([req.file]);
@@ -787,7 +787,7 @@ export const updateSection = async (req, res, next) => {
     const { page, heading, subHeading, body, orientation } = req.body;
 
     // Validate required fields
-    if (!page || !heading || !subHeading || !body || !orientation) {
+    if (!page || !heading || !body || !orientation) {
       if (req.file) {
         await deleteImagesFromS3([req.file]);
       }

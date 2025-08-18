@@ -12,7 +12,6 @@ const sectionSchema = new mongoose.Schema({
     },
     subHeading: {
         type: String,
-        required: [true, "Sub Heading is required"],
     },
     body: {
         type: String,
