@@ -34,6 +34,7 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(cors({
     origin: [
+        'https://neiea.org',
         'https://neiea-v1.vercel.app',
         'https://neiea-v1-dev.vercel.app',
         'http://localhost:5173'
