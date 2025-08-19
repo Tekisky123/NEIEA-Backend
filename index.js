@@ -33,9 +33,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(cors({
-    origin: "*",
-    methods: ["GET","POST","PUT","PATCH","DELETE","ALL"]
+    origin: "*", // agar tum credentials use karoge to yahan specific domain dena padega
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"], // important!
 }));
+
+// Preflight requests handle karne ke liye
+app.options("*", cors());
 
 app.use("/donation", donationRoutes);
 app.use("/donor", donorUserRoutes);
