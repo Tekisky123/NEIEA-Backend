@@ -33,13 +33,18 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(cors({
-    origin: "*", // agar tum credentials use karoge to yahan specific domain dena padega
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"], // important!
+    origin: [
+        'https://neiea.org',
+        'https://neiea-v1.vercel.app',
+        'https://neiea-v1-dev.vercel.app',
+        'http://localhost:5173'
+    ],
+    methods:[ "GET","POST","PUT","PATCH","DELETE","OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials:true
 }));
 
-// Preflight requests handle karne ke liye
-app.options("*", cors());
+app.options("*", cors()); // preflight requests allow
 
 app.use("/donation", donationRoutes);
 app.use("/donor", donorUserRoutes);
